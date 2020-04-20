@@ -3,7 +3,8 @@ import RPi.GPIO as GPIO
 import Adafruit_DHT
 from pyrebase import pyrebase
 from time import sleep
-import datetime
+from datetime import datetime as dt
+from flask import request
 
 config = {
     "apiKey": "AIzaSyB0uOWyGYjD4Q0FUEbsZ7TBD21SzcNDGRg",
@@ -60,10 +61,18 @@ def led():
     status = request.args.get('status')
     if status == "on":
         GPIO.output(17, GPIO.HIGH)
+        now = dt.now()
+        current_time = now.strftime("%b-%d-%Y at %H:%M:%S")
+        data = {"status": "turned on", "time": current_time , 'ip': request.remote_addr}
+        db.child('/led_history/').push(data)
         return jsonify({"message": "Led successfully turned on" , "23 status": GPIO.input(23)}, )
 
     elif status == "off":
         GPIO.output(17, GPIO.LOW)
+        now = dt.now()
+        current_time = now.strftime("%b-%d-%Y at %H:%M:%S")
+        data = {"status": "turned off", "time": current_time , 'ip': request.remote_addr}
+        db.child('/led_history/').push(data)
         return jsonify({"message": "Led successfully turned off" , "23 status": GPIO.input(23)})
     else:
         return jsonify({"message": "Not a valid status" ,  "23 status": GPIO.input(23)})
